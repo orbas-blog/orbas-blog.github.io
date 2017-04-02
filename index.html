@@ -1,0 +1,371 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>艾文技術筆記</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Ivan Wu">
+    
+
+    
+    <meta property="og:type" content="website">
+<meta property="og:title" content="艾文技術筆記">
+<meta property="og:url" content="http://blog.orbas.net/index.html">
+<meta property="og:site_name" content="艾文技術筆記">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="艾文技術筆記">
+
+    
+    <link rel="alternative" href="/atom.xml" title="艾文技術筆記" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="艾文技術筆記" title="艾文技術筆記"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="艾文技術筆記">艾文技術筆記</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:blog.orbas.net">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main">
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2017/04/01/google-recaptcha/" title="Google 機器人驗證 - reCAPTCHA" itemprop="url">Google 機器人驗證 - reCAPTCHA</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Ivan Wu" target="_blank" itemprop="author">Ivan Wu</a>
+		
+  <p class="article-time">
+    <time datetime="2017-04-01T15:34:00.000Z" itemprop="datePublished"> 發表於 2017-04-01</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <img src="/2017/04/01/google-recaptcha/robot.gif" alt="robot.gif" title="">
+<p>google 提供了打勾驗證機器人的方式，取代輸入驗證碼，大大減少輸入惱人的扭曲驗證碼的方式</p>
+<p>近期 google 更是提供了隱形的驗證方式，連打勾都省了，以下範例使用 Laravel 作為示範，實做 google recaptcha</p>
+<h2 id="申請："><a href="#申請：" class="headerlink" title="申請："></a>申請：</h2><p>至 <a href="https://www.google.com/recaptcha/admin" target="_blank" rel="external">https://www.google.com/recaptcha/admin</a> 做申請</p>
+<p>如下圖所示：<br><img src="/2017/04/01/google-recaptcha/apply-1.png" alt="apply-1.png" title=""></p>
+<ol>
+<li>選擇 recaptcha 種類</li>
+<li>設定要使用 recaptcha 的網址，一行一個</li>
+<li>勾選 accept the reCAPTCHA Term of Service</li>
+<li>設定完畢，點選 register</li>
+</ol>
+<p>接下來會看到畫面分三個部分</p>
+<ol>
+<li><p>keys：<br> Site key：主要放在 HTML 裡，向 google 取得驗證用，是公開的。<br> Secret key：表單送出後，由 server 跟 google 驗證是否為有效驗證，勿公開。</p>
+</li>
+<li><p>client-side integration：<br> recaptcha v2 及 invisible 主要差在這個部分而已，以下範例會再詳細說明。</p>
+</li>
+<li><p>server-side integration：<br> 與 google 取得驗證用。</p>
+</li>
+</ol>
+<h2 id="實作"><a href="#實作" class="headerlink" title="實作"></a>實作</h2><p>在 header 加入 script，取得 google js api<br><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://www.google.com/recaptcha/api.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<p>接下來分兩部分實作，將 <code>{YOUR_SITE_KEY}</code> 放入上述提供的 site key</p>
+<h3 id="recaptcha-v2"><a href="#recaptcha-v2" class="headerlink" title="recaptcha v2"></a>recaptcha v2</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/post"</span> <span class="attr">method</span>=<span class="string">"post"</span>&gt;</span></div><div class="line"></div><div class="line">    &#123;&#123; csrf_field() &#125;&#125;</div><div class="line"></div><div class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"g-recaptcha"</span> <span class="attr">data-sitekey</span>=<span class="string">"&#123;YOUR_SITE_KEY&#125;"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"submit"</span>&gt;</span>Submit<span class="tag">&lt;/<span class="name">button</span>&gt;</span></div><div class="line"></div><div class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></div></pre></td></tr></table></figure>
+<h3 id="invisible-recaptcha"><a href="#invisible-recaptcha" class="headerlink" title="invisible recaptcha"></a>invisible recaptcha</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/post"</span> <span class="attr">method</span>=<span class="string">"post"</span> <span class="attr">id</span>=<span class="string">"form"</span>&gt;</span></div><div class="line"></div><div class="line">    &#123;&#123; csrf_field() &#125;&#125;</div><div class="line"></div><div class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"submit"</span></span></div><div class="line">            <span class="attr">class</span>=<span class="string">"g-recaptcha"</span></div><div class="line">            <span class="attr">data-sitekey</span>=<span class="string">"&#123;YOUR_SITE_KEY&#125;"</span></div><div class="line">            <span class="attr">data-callback</span>=<span class="string">"OnSubmitFunction"</span>&gt;</div><div class="line">        Submit</div><div class="line">    <span class="tag">&lt;/<span class="name">button</span>&gt;</span></div><div class="line"></div><div class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></div><div class="line">function OnSubmitFunction(token) &#123;</div><div class="line">	document.getElementById('form').submit();</div><div class="line">&#125;</div><div class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>button 放入 <code>data-callback=&quot;OnSubmitFunction&quot;</code>，在表單送出後會觸發 <code>OnSubmitFunction</code> 這個 function，預設會將 token 帶入 function 第一個參數，以這個例子來講沒有用處，所以不在此討論。</p>
+<p>接下來應該就會看到我不是機器人的畫面，<br>隱形的 recaptcha，應該會在右下角看到 google recaptcha 的 Logo</p>
+<img src="/2017/04/01/google-recaptcha/apply-2.png" alt="apply-2.png" title="">
+<h3 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h3><div id="flowchart-0" class="flow-chart"></div>
+
+<h3 id="後端處理"><a href="#後端處理" class="headerlink" title="後端處理"></a>後端處理</h3><p>前端會將 token 名稱 <code>g-recaptcha-response</code> 自動 post 到後端，後端將 token 及 secret key POST 到 <a href="https://www.google.com/recaptcha/api/siteverify" target="_blank" rel="external">https://www.google.com/recaptcha/api/siteverify</a> 取得驗證</p>
+<p>將 YOUR_SECRET_KEY 替換成你的 secret key</p>
+<figure class="highlight php"><figcaption><span>routes/web.php</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">Route::post(<span class="string">'/post'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(\Illuminate\Http\Request $request)</span> </span>&#123;</div><div class="line"></div><div class="line">    $client = <span class="keyword">new</span> \GuzzleHttp\Client();</div><div class="line">    $result = $client-&gt;post(<span class="string">'https://www.google.com/recaptcha/api/siteverify'</span>, [</div><div class="line">        <span class="string">'form_params'</span> =&gt; [</div><div class="line">            <span class="string">'secret'</span> =&gt; <span class="string">'YOUR_SECRET_KEY'</span>,</div><div class="line">            <span class="string">'response'</span> =&gt; $request-&gt;get(<span class="string">'g-recaptcha-response'</span>)</div><div class="line">        ]</div><div class="line">    ]);</div><div class="line"></div><div class="line">    $result = json_decode($result-&gt;getBody(), <span class="keyword">true</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">isset</span>($result[<span class="string">'success'</span>]) &amp;&amp; $result[<span class="string">'success'</span>]) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="string">'驗證成功'</span>;</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="keyword">return</span> <span class="string">'驗證失敗'</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>該範例使用 guzzle 處理 post，記得將 composer 加入 guzzle 套件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">composer require guzzlehttp/guzzle</div></pre></td></tr></table></figure>
+<p>上述就是一個基本的 google recaptcha 驗證流程，有任何問題歡迎發問！</p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 開始
+e=>end: 結束
+op1=>operation: 點選我不是機器人（或者button）
+op2=>operation: 向 google 取得 token
+op3=>operation: 將 token post 到後端
+op4=>operation: 以 secret key 及 token 向 google 驗證是否通過
+
+st->op1->op2->op3->op4->e</textarea><textarea id="flowchart-0-options" style="display: none">"drawSVG"</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(document.getElementById("flowchart-0-options").value);  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script>
+        
+        
+        <p class="article-more-link">
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/google-api/">google api</a><a href="/tags/recaptcha/">recaptcha</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2017/04/01/google-recaptcha/#disqus_thread" class="comments-count-link">Comments</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+
+</div>
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+
+
+  
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/google-api/" title="google api">google api<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/recaptcha/" title="recaptcha">recaptcha<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://works.orbas.net" target="_blank" title="衛生紙計算機">衛生紙計算機</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 訂閱</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m Ivan. <br/>
+			This is my blog.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		
+		
+		
+		<a href="https://www.facebook.com/bingyu.wu" target="_blank" class="icon-facebook" title="facebook"></a>
+		
+		
+		
+		
+		
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="Ivan Wu">Ivan Wu</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+ </html>
